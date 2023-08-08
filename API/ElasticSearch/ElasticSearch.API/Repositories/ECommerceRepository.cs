@@ -288,6 +288,7 @@ namespace ElasticSearch.API.Repositories
         }
         public async Task<ImmutableList<ECommerce>> MultiMatchFullTextQuery(string name)
         {
+            // burada aradığımız değeri ilk adında veya soyadında veya tam adında arıyor.Hangisinde varsa onları getiriyor.
             var result2 = await _client.SearchAsync<ECommerce>(i => i.Index(indexName)
                                                         .Size(1000)
                                                         .Query(q => q
