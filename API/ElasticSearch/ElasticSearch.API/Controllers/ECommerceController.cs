@@ -83,5 +83,23 @@ namespace ElasticSearch.API.Controllers
             var response = await _repo.MatchPhraseQuery(customerFullName);
             return Ok(response);
         }
+        [HttpGet]
+        public async Task<IActionResult> CompoundQueryExample(string cityName, double taxfulTotalPrice, string categoryName, string manufacturer)
+        {
+            var response = await _repo.CompoundQueryExample(cityName,taxfulTotalPrice,categoryName,manufacturer);
+            return Ok(response);
+        }
+        [HttpGet]
+        public async Task<IActionResult> CompoundQueryExample1(string cutomerFullName)
+        {
+            var response = await _repo.CompoundQueryExample1(cutomerFullName);
+            return Ok(response);
+        }
+        [HttpGet]
+        public async Task<IActionResult> MultiMatchFullTextQuery(string name)
+        {
+            var response = await _repo.MultiMatchFullTextQuery(name);
+            return Ok(response);
+        }
     }
 }

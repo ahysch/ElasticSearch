@@ -131,8 +131,8 @@ namespace ElasticSearch.API.Repositories
         {
             var result = await _client.SearchAsync<ECommerce>(i => i.Index(indexName)
                                                                     .Query(q => q
-                                                                    .Wildcard(w=>w
-                                                                    .Field(f=>f.CustomerFullName.Suffix("keyword"))
+                                                                    .Wildcard(w => w
+                                                                    .Field(f => f.CustomerFullName.Suffix("keyword"))
                                                                     .Wildcard(customerFullName))));
 
             foreach (var hit in result.Hits)
@@ -157,8 +157,8 @@ namespace ElasticSearch.API.Repositories
                                                         .Fuzzy(w => w
                                                         .Field(f => f.CustomerFirstName.Suffix("keyword")).Value(customerName)
                                                         .Fuzziness(new Fuzziness(2))))
-                                                        .Sort(sort=>sort
-                                                        .Field(f=>f.TaxfulTotalPrice,new FieldSort() { Order = SortOrder.Desc})));
+                                                        .Sort(sort => sort
+                                                        .Field(f => f.TaxfulTotalPrice, new FieldSort() { Order = SortOrder.Desc })));
 
             foreach (var hit in result2.Hits)
                 hit.Source.Id = hit.Id;
@@ -221,6 +221,81 @@ namespace ElasticSearch.API.Repositories
                                                         .MatchPhrase(m => m
                                                         .Field(f => f.CustomerFullName)
                                                         .Query(customerFullName))));
+
+
+            foreach (var hit in result2.Hits)
+                hit.Source.Id = hit.Id;
+
+            return result2.Documents.ToImmutableList();
+
+        }
+        public async Task<ImmutableList<ECommerce>> CompoundQueryExample(string cityName, double taxfulTotalPrice, string categoryName, string manufacturer)
+        {
+            var result2 = await _client.SearchAsync<ECommerce>(i => i.Index(indexName)
+                                                        .Size(1000)
+                                                        .Query(q => q
+                                                        .Bool(b => b
+                                                        .Must(m => m.Term(t => t.Field("geoip.city_name").Value(cityName)))
+                                                        .MustNot(mn => mn.Range(r => r.NumberRange(nr => nr.Field(f => f.TaxfulTotalPrice).Lte(taxfulTotalPrice))))
+                                                        .Should(sh => sh.Term(t => t.Field(f => f.Category.Suffix("keyword")).Value(categoryName)))
+                                                        .Filter(f => f.Term(t => t.Field("manufacturer.keyword").Value(manufacturer))))));
+
+
+            foreach (var hit in result2.Hits)
+                hit.Source.Id = hit.Id;
+
+            return result2.Documents.ToImmutableList();
+
+        }
+        public async Task<ImmutableList<ECommerce>> CompoundQueryExample1(string customerFullName)
+        {
+
+            // Burada Recip Brock aradık. Recip veya Brock olanlar geldi fakat Rec yazınca birşey gelmedi.Altta diğer yöntemde bunu ele alacağız.
+            //var result = await _client.SearchAsync<ECommerce>(i => i.Index(indexName)
+            //                                            .Size(1000)
+            //                                            .Query(q => q
+            //                                            .Bool(b => b
+            //                                            .Must(m => m
+            //                                            .Match(m => m
+            //                                            .Field(f => f.CustomerFullName)
+            //                                            .Query(customerFullName))))));
+
+
+            // Burada yukarıdaki Rec yazınca gelmesi ayarlandı.Fakat aşağıda daha iyi yöntem var.
+            //var result1 = await _client.SearchAsync<ECommerce>(i => i.Index(indexName)
+            //                                .Size(1000)
+            //                                .Query(q => q
+            //                                .Bool(b => b
+            //                                .Should(m => m
+            //                                .Match(m => m
+            //                                .Field(f => f.CustomerFullName)
+            //                                .Query(customerFullName)).Prefix(p=>p.Field(f=>f.CustomerFullName.Suffix("keyword")).Value(customerFullName))))));
+
+
+            // burada en etkili yöntem bu fakat diğer queryleri nasıl kullanacağız diye yazdık.
+            var result2 = await _client.SearchAsync<ECommerce>(i => i.Index(indexName)
+                                            .Size(1000)
+                                            .Query(q => q
+                                            .MatchPhrasePrefix(m => m
+                                            .Field(f => f.CustomerFullName)
+                                            .Query(customerFullName))));
+
+            foreach (var hit in result2.Hits)
+                hit.Source.Id = hit.Id;
+
+            return result2.Documents.ToImmutableList();
+
+        }
+        public async Task<ImmutableList<ECommerce>> MultiMatchFullTextQuery(string name)
+        {
+            var result2 = await _client.SearchAsync<ECommerce>(i => i.Index(indexName)
+                                                        .Size(1000)
+                                                        .Query(q => q
+                                                        .MultiMatch(mm => mm
+                                                        .Fields(new Field("customer_first_name")
+                                                        .And(new Field("customer_last_name"))
+                                                        .And(new Field("customer_full_name")))
+                                                        .Query(name))));
 
 
             foreach (var hit in result2.Hits)
