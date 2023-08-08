@@ -1,17 +1,16 @@
-﻿using ElasticSearch.API.DTOs;
+﻿using Elastic.Clients.Elasticsearch;
+using ElasticSearch.API.DTOs;
 using ElasticSearch.API.Models;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Nest;
 using System.Collections.Immutable;
 
 namespace ElasticSearch.API.Repositories
 {
     public class ProductRepository
     {
-        private readonly ElasticClient _client;
-        private const string indexName = "productsaa";
+        private readonly ElasticsearchClient _client;
+        private const string indexName = "products";
 
-        public ProductRepository(ElasticClient client)
+        public ProductRepository(ElasticsearchClient client)
         {
             _client = client;
         }
@@ -39,9 +38,9 @@ namespace ElasticSearch.API.Repositories
         {
             newProduct.Created = DateTime.Now;
 
-            var response = await _client.IndexAsync(newProduct, x => x.Index("products").Id(Guid.NewGuid().ToString()));
+            var response = await _client.IndexAsync(newProduct, x => x.Index(indexName).Id(Guid.NewGuid().ToString()));
 
-            if (!response.IsValid)
+            if (!response.IsSuccess())
             {
                 return null;
             }
@@ -66,7 +65,7 @@ namespace ElasticSearch.API.Repositories
         {
             var response = await _client.GetAsync<Product>(id, x => x.Index(indexName));
 
-            if (!response.IsValid)
+            if (!response.IsSuccess())
             {
                 return null;
             }
@@ -77,9 +76,9 @@ namespace ElasticSearch.API.Repositories
 
         public async Task<bool> UpdateAsync(ProductUpdateDto updateProduct) 
         {
-            var response = await _client.UpdateAsync<Product, ProductUpdateDto>(updateProduct.Id, x => x.Index(indexName).Doc(updateProduct));
+            var response = await _client.UpdateAsync<Product, ProductUpdateDto>(indexName,updateProduct.Id,x=>x.Doc(updateProduct));
 
-            return response.IsValid;
+            return response.IsSuccess();
         }
         /// <summary>
         /// Hata yönetimi için bu method ele alınmıştır.
