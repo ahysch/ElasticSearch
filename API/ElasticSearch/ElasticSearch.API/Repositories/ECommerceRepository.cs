@@ -266,10 +266,10 @@ namespace ElasticSearch.API.Repositories
             //                                .Size(1000)
             //                                .Query(q => q
             //                                .Bool(b => b
-            //                                .Should(m => m
+            //                                .Should(s => s
             //                                .Match(m => m
             //                                .Field(f => f.CustomerFullName)
-            //                                .Query(customerFullName)).Prefix(p=>p.Field(f=>f.CustomerFullName.Suffix("keyword")).Value(customerFullName))))));
+            //                                .Query(customerFullName)),s => s.Prefix(p=>p.Field(f=>f.CustomerFullName.Suffix("keyword")).Value(customerFullName))))));
 
 
             // burada en etkili yöntem bu fakat diğer queryleri nasıl kullanacağız diye yazdık.
